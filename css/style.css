@@ -130,10 +130,15 @@ p{ margin:0 0 .6em; line-height:1.55; }
 
 .word-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
 .word-row{
-  display:flex; align-items:center; gap:12px;
+  display:flex; align-items:center; gap:6px;
   background:var(--card-bg); border:1px solid var(--line); border-radius:var(--radius-m);
   padding:11px 14px; text-align:left; width:100%;
 }
+.word-row-main{
+  display:flex; align-items:center; gap:12px; flex:1; min-width:0;
+  border:none; background:none; padding:0; text-align:left; color:inherit; font:inherit;
+}
+.word-row .edit-word-btn{ flex-shrink:0; }
 .word-row .w-hanzi{ font-family:var(--font-cjk-display); font-size:1.5rem; min-width:2.2em; }
 .word-row .w-mid{ flex:1; min-width:0; }
 .word-row .w-pinyin{ font-size:.78rem; color:var(--gold); font-weight:600; }
@@ -300,6 +305,9 @@ p{ margin:0 0 .6em; line-height:1.55; }
 .add-tab.active{ background:var(--card-bg); color:var(--ink); box-shadow:var(--shadow-sm); }
 
 .form-note{ background:var(--gold-soft); color:var(--seal-dark); padding:9px 12px; border-radius:var(--radius-s); font-size:.82rem; margin-bottom:12px; }
+.dup-check{ font-size:.78rem; font-weight:600; margin-top:5px; }
+.dup-check.ok{ color:var(--jade); }
+.dup-check.bad{ color:var(--seal-dark); }
 .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
 .form-grid label{ display:flex; flex-direction:column; gap:5px; font-size:.78rem; font-weight:600; color:var(--ink-soft); }
 .form-grid label.full{ grid-column:1 / -1; }
