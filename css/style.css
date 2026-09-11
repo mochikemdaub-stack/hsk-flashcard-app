@@ -364,3 +364,11 @@ p{ margin:0 0 .6em; line-height:1.55; }
   .card-main{ font-size:4rem; }
   .flashcard{ min-height:400px; }
 }
+
+/* Fix: elements that also set their own `display` (e.g. .modal-backdrop, .bulk-panel)
+   would otherwise override the browser's default [hidden]{display:none}, since both
+   rules have equal specificity and the site's own stylesheet loads after the
+   user-agent one. Force [hidden] to always win so toggling the `hidden` attribute
+   from JS reliably hides the element (fixes the stats/detail modals' close button
+   and the "Nhập/Xuất hàng loạt" tab not hiding). */
+[hidden]{ display:none !important; }
