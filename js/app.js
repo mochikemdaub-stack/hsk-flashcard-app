@@ -162,15 +162,18 @@ function renderList(){
     const li = document.createElement('li');
     const st = getProgress(w.id).status;
     li.innerHTML = `
-      <button class="word-row" data-id="${w.id}" style="border:none;">
-        <span class="w-status ${st}"></span>
-        <span class="w-hanzi zh">${escapeHTML(w.w)}</span>
-        <span class="w-mid">
-          <div class="w-pinyin">${escapeHTML(w.p)}</div>
-          <div class="w-meaning">${escapeHTML(w.m || w.en || 'Chưa có nghĩa')}</div>
-        </span>
-        <span class="w-badge">${w.lv==='custom' ? 'Tôi' : 'H'+w.lv}</span>
-      </button>`;
+      <div class="word-row">
+        <button class="word-row-main" data-id="${w.id}">
+          <span class="w-status ${st}"></span>
+          <span class="w-hanzi zh">${escapeHTML(w.w)}</span>
+          <span class="w-mid">
+            <div class="w-pinyin">${escapeHTML(w.p)}</div>
+            <div class="w-meaning">${escapeHTML(w.m || w.en || 'Chưa có nghĩa')}</div>
+          </span>
+          <span class="w-badge">${w.lv==='custom' ? 'Tôi' : 'H'+w.lv}</span>
+        </button>
+        <button class="icon-btn small edit-word-btn" data-edit-id="${w.id}" title="Sửa / thêm ghi chú, câu ví dụ">✎</button>
+      </div>`;
     wordListEl.appendChild(li);
   });
 
@@ -188,7 +191,15 @@ function renderList(){
   }
 }
 wordListEl.addEventListener('click', e=>{
-  const btn = e.target.closest('.word-row'); if(!btn) return;
+  const editBtn = e.target.closest('.edit-word-btn');
+  if(editBtn){
+    showView('add');
+    document.querySelector('.add-tab[data-addtab="form"]').click();
+    loadWordIntoForm(editBtn.dataset.editId);
+    window.scrollTo({top:0});
+    return;
+  }
+  const btn = e.target.closest('.word-row-main'); if(!btn) return;
   openDetail(btn.dataset.id);
 });
 renderList();
@@ -222,6 +233,7 @@ function openDetail(id){
     ${w.ex ? `<div class="detail-section"><h4>Câu ví dụ</h4><div class="cb-example"><span class="zh">${escapeHTML(w.ex)}</span>${w.exVi?escapeHTML(w.exVi):''}</div></div>` : ''}
     ${w.syn ? `<div class="detail-section"><h4>Từ đồng nghĩa</h4><p>${escapeHTML(w.syn)}</p></div>` : ''}
     ${w.ant ? `<div class="detail-section"><h4>Từ trái nghĩa</h4><p>${escapeHTML(w.ant)}</p></div>` : ''}
+    ${w.note ? `<div class="detail-section"><h4>Ghi chú / Lưu ý</h4><p>${escapeHTML(w.note)}</p></div>` : ''}
   `;
   detailModal.hidden = false;
   document.getElementById('detailSpeak').addEventListener('click', ()=>speak(w.w));
@@ -664,11 +676,38 @@ const fWord=document.getElementById('fWord'), fPinyin=document.getElementById('f
       fLevel=document.getElementById('fLevel'), fPos=document.getElementById('fPos'),
       fMeaning=document.getElementById('fMeaning'), fExample=document.getElementById('fExample'),
       fExampleVi=document.getElementById('fExampleVi'), fSyn=document.getElementById('fSyn'),
-      fAnt=document.getElementById('fAnt'), editIdInput=document.getElementById('editId'),
-      formEditNote=document.getElementById('formEditNote'), cancelEditBtn=document.getElementById('cancelEditBtn');
+      fAnt=document.getElementById('fAnt'), fNote=document.getElementById('fNote'),
+      editIdInput=document.getElementById('editId'),
+      formEditNote=document.getElementById('formEditNote'), cancelEditBtn=document.getElementById('cancelEditBtn'),
+      dupCheckMsg=document.getElementById('dupCheckMsg');
+
+/* ---- duplicate check: a word is only valid to ADD when its Chữ Hán
+   doesn't already match another entry (built-in HSK or custom). ---- */
+function findDuplicate(word, ignoreId){
+  if(!word) return null;
+  return MERGED.find(w => w.w === word && w.id !== ignoreId) || null;
+}
+function checkDuplicateWord(){
+  const val = fWord.value.trim();
+  if(!val){ dupCheckMsg.hidden = true; return true; }
+  const dup = findDuplicate(val, editIdInput.value);
+  if(dup){
+    dupCheckMsg.hidden = false;
+    dupCheckMsg.className = 'dup-check bad';
+    const where = dup.lv==='custom' ? 'từ của tôi' : ('HSK'+dup.lv);
+    dupCheckMsg.textContent = `⚠ Từ "${val}" đã có trong danh sách (${where}${dup.m ? ' — '+dup.m : ''}). Không thể thêm trùng.`;
+    return false;
+  }
+  dupCheckMsg.hidden = false;
+  dupCheckMsg.className = 'dup-check ok';
+  dupCheckMsg.textContent = `✓ Từ mới, chưa có trong danh sách — điền tiếp nghĩa, cấp độ, pinyin bên dưới.`;
+  return true;
+}
+fWord.addEventListener('input', checkDuplicateWord);
 
 function resetForm(){
   wordForm.reset(); editIdInput.value=''; formEditNote.hidden=true; cancelEditBtn.hidden=true; fLevel.value='5';
+  dupCheckMsg.hidden = true;
 }
 function loadWordIntoForm(id){
   const w = BY_ID.get(id); if(!w) return;
@@ -676,6 +715,8 @@ function loadWordIntoForm(id){
   fWord.value = w.w; fPinyin.value = w.p; fLevel.value = String(w.lv);
   fPos.value = w.posVi || ''; fMeaning.value = w.m || ''; fExample.value = w.ex || '';
   fExampleVi.value = w.exVi || ''; fSyn.value = w.syn || ''; fAnt.value = w.ant || '';
+  fNote.value = w.note || '';
+  dupCheckMsg.hidden = true;
   formEditNote.hidden = false;
   formEditNote.textContent = id.startsWith('h') ? 'Đang sửa từ có sẵn trong bộ HSK — chỉnh sửa sẽ được lưu riêng trên trình duyệt này.' : 'Đang sửa từ do bạn tự thêm.';
   cancelEditBtn.hidden = false;
@@ -688,8 +729,10 @@ wordForm.addEventListener('submit', e=>{
     w: fWord.value.trim(), p: fPinyin.value.trim(), lv: fLevel.value==='custom' ? 'custom' : Number(fLevel.value),
     pos:'', posVi: fPos.value.trim(), m: fMeaning.value.trim(), en:'',
     ex: fExample.value.trim(), exVi: fExampleVi.value.trim(), syn: fSyn.value.trim(), ant: fAnt.value.trim(),
+    note: fNote.value.trim(),
   };
   if(!data.w || !data.p || !data.m){ toast('Vui lòng điền Chữ Hán, Pinyin và Nghĩa'); return; }
+  if(!checkDuplicateWord()){ toast('Từ này đã tồn tại — không thể thêm trùng.'); fWord.focus(); return; }
 
   const editId = editIdInput.value;
   if(editId && editId.startsWith('h')){
@@ -794,7 +837,7 @@ document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
   const editedBase = Object.entries(overrides).map(([id,v])=>Object.assign({id}, BY_ID.get(id)||{}, v));
   const rows = [...customWords, ...editedBase].map(w=>({
     id: w.id.startsWith('c') ? '' : w.id, word:w.w, pinyin:w.p, level:w.lv, pos:w.posVi,
-    meaning:w.m, example:w.ex, exampleVi:w.exVi, synonyms:w.syn, antonyms:w.ant,
+    meaning:w.m, example:w.ex, exampleVi:w.exVi, synonyms:w.syn, antonyms:w.ant, note:w.note||'',
   }));
   downloadFile('hsk-du-lieu-cua-toi.csv', toCSV(rows), 'text/csv');
 });
@@ -837,7 +880,8 @@ document.getElementById('bulkImportBtn').addEventListener('click', ()=>{
     }
   }catch(err){ resultEl.textContent = 'Không đọc được dữ liệu: '+err.message; return; }
 
-  let updated=0, added=0;
+  let updated=0, added=0, skippedDup=0;
+  const seenWords = new Set(MERGED.map(w=>w.w));
   rows.forEach(r=>{
     const id = (r.id||'').trim();
     const data = {
@@ -846,6 +890,7 @@ document.getElementById('bulkImportBtn').addEventListener('click', ()=>{
       pos:'', posVi:(r.pos||r.posVi||'').trim(), m:(r.meaning||r.m||'').trim(), en:'',
       ex:(r.example||r.ex||'').trim(), exVi:(r.exampleVi||r.exVi||'').trim(),
       syn:(r.synonyms||r.syn||'').trim(), ant:(r.antonyms||r.ant||'').trim(),
+      note:(r.note||'').trim(),
     };
     if(!data.w && !data.m) return;
     if(id && BY_ID.has(id)){
@@ -856,14 +901,17 @@ document.getElementById('bulkImportBtn').addEventListener('click', ()=>{
       overrides[id] = merged;
       updated++;
     } else {
+      // new word: skip if it duplicates a Chữ Hán already in the list (built-in or just-added in this batch)
+      if(data.w && seenWords.has(data.w)){ skippedDup++; return; }
       const newId = 'c'+Date.now()+Math.floor(Math.random()*10000)+added;
       customWords.push(Object.assign({id:newId}, data));
+      if(data.w) seenWords.add(data.w);
       added++;
     }
   });
   saveJSON(LS.overrides, overrides); saveJSON(LS.custom, customWords);
   rebuildMerged(); renderList(); updateDeckCount(); renderMineList();
-  resultEl.textContent = `Xong! Đã cập nhật ${updated} từ có sẵn và thêm ${added} từ mới.`;
+  resultEl.textContent = `Xong! Đã cập nhật ${updated} từ có sẵn, thêm ${added} từ mới`+(skippedDup ? `, bỏ qua ${skippedDup} từ bị trùng.` : '.');
   document.getElementById('bulkInput').value = '';
 });
 
