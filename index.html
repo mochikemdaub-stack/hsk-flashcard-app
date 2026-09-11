@@ -207,7 +207,10 @@
         <input type="hidden" id="editId">
         <p class="form-note" id="formEditNote" hidden></p>
         <div class="form-grid">
-          <label>Chữ Hán *<input type="text" id="fWord" required placeholder="例如 你好"></label>
+          <label class="full">Chữ Hán *
+            <input type="text" id="fWord" required placeholder="例如 你好" autocomplete="off">
+            <p class="dup-check" id="dupCheckMsg" hidden></p>
+          </label>
           <label>Pinyin *<input type="text" id="fPinyin" required placeholder="nǐ hǎo"></label>
           <label>Cấp độ<select id="fLevel">
             <option value="1">HSK1</option><option value="2">HSK2</option>
@@ -220,6 +223,7 @@
           <label class="full">Dịch câu ví dụ<input type="text" id="fExampleVi" placeholder="Tôi yêu bạn."></label>
           <label>Từ đồng nghĩa<input type="text" id="fSyn" placeholder="喜欢"></label>
           <label>Từ trái nghĩa<input type="text" id="fAnt" placeholder="恨"></label>
+          <label class="full">Ghi chú / Lưu ý<textarea id="fNote" placeholder="Mẹo nhớ, lưu ý cách dùng, phân biệt với từ dễ nhầm…"></textarea></label>
         </div>
         <div class="form-actions">
           <button type="submit" class="primary-btn">Lưu từ</button>
@@ -243,8 +247,8 @@
         </div>
         <div class="bulk-block">
           <h3>Nhập / sửa hàng loạt</h3>
-          <p class="muted">Dán CSV có cột: <code>id,word,pinyin,level,pos,meaning,example,exampleVi,synonyms,antonyms</code>. Cột <code>id</code> để trống nếu là từ mới; điền <code>id</code> (ví dụ <code>h123</code>) để sửa từ có sẵn — dùng cách này để điền nhanh nghĩa cho các từ HSK2-5 còn thiếu.</p>
-          <textarea id="bulkInput" class="bulk-textarea" placeholder="id,word,pinyin,level,pos,meaning,example,exampleVi,synonyms,antonyms&#10;,你好,nǐ hǎo,1,,xin chào,,,,"></textarea>
+          <p class="muted">Dán CSV có cột: <code>id,word,pinyin,level,pos,meaning,example,exampleVi,synonyms,antonyms,note</code>. Cột <code>id</code> để trống nếu là từ mới; điền <code>id</code> (ví dụ <code>h123</code>) để sửa từ có sẵn — dùng cách này để điền nhanh nghĩa cho các từ HSK2-5 còn thiếu. Từ trùng chữ Hán với từ đã có sẽ tự động bị bỏ qua khi thêm mới.</p>
+          <textarea id="bulkInput" class="bulk-textarea" placeholder="id,word,pinyin,level,pos,meaning,example,exampleVi,synonyms,antonyms,note&#10;,你好,nǐ hǎo,1,,xin chào,,,,,"></textarea>
           <div class="bulk-actions">
             <input type="file" id="bulkFile" accept=".csv,.json" hidden>
             <button class="ghost-btn" id="bulkFilePickBtn">Chọn tệp CSV/JSON…</button>
